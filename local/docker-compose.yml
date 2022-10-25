@@ -1,4 +1,4 @@
-version: "3.3"
+version: "3.9"
 services:
   envoy:
     image: envoyproxy/envoy:v1.21.1
@@ -117,5 +117,37 @@ services:
       APP_SERVICE_NAME: ${PDS_SERVICE_NAME:-pds}
       APP_SERVICE_ENV: ${PDS_SERVICE_ENV:-development}
       APP_OTEL_EXPORTER_OTLP_ENDPOINT: ${COMMON_OTEL_EXPORTER_OTLP_ENDPOINT:-localhost:4317}
+  opensearch:
+    profiles:
+      - dashboard
+    image: public.ecr.aws/opensearchproject/opensearch:2.3.0
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - DISABLE_SECURITY_PLUGIN=true
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+    volumes:
+      - opensearch:/usr/share/opensearch/data
+    ports:
+      - 9200:9200
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+  opensearch-dashboard:
+    profiles:
+      - dashboard
+    image: public.ecr.aws/opensearchproject/opensearch-dashboards:2.3.0
+    ports:
+      - 5601:5601
+    environment:
+      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+      - OPENSEARCH_HOSTS=["http://opensearch:9200"]
+
 volumes:
   mysql-db: {}
+  opensearch: {}
