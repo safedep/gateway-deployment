@@ -4,7 +4,7 @@ services:
     image: envoyproxy/envoy:v1.21.1
     command: envoy -c /config/envoy.json
     volumes:
-      - ${BOOTSTRAP_ENVOY_FILE:-./config/envoy.json}:/config/envoy.json
+      - ${BOOTSTRAP_ENVOY_FILE:-./config/local/envoy.json}:/config/envoy.json
     ports:
       - "10000:10000"
   mysql-server:
@@ -28,8 +28,8 @@ services:
     image: ghcr.io/safedep/gateway:latest
     command: pdp-server
     volumes:
-      - ${BOOTSTRAP_CONFIG_FILE:-./config/gateway.json}:/config/gateway.json
-      - ${BOOTSTRAP_BASIC_AUTH_FILE:-./config/gateway-auth-basic.txt}:/auth/basic-auth-credentials.txt
+      - ${BOOTSTRAP_CONFIG_FILE:-./config/local/gateway.json}:/config/gateway.json
+      - ${BOOTSTRAP_BASIC_AUTH_DIR:-./config/local/auth}:/auth
       - ./policies:/policies
       - ./pki/pdp/server.crt:/config/pki/server.crt
       - ./pki/pdp/server.key:/config/pki/server.key
@@ -54,7 +54,7 @@ services:
     image: ghcr.io/safedep/gateway:latest
     command: tap-server
     volumes:
-      - ${BOOTSTRAP_CONFIG_FILE:-./config/gateway.json}:/config/gateway.json
+      - ${BOOTSTRAP_CONFIG_FILE:-./config/local/gateway.json}:/config/gateway.json
       - ./pki/tap/server.crt:/config/pki/server.crt
       - ./pki/tap/server.key:/config/pki/server.key
       - ./pki/root.crt:/config/pki/root.crt
@@ -73,7 +73,7 @@ services:
     image: ghcr.io/safedep/gateway:latest
     command: dcs-server
     volumes:
-      - ${BOOTSTRAP_CONFIG_FILE:-./config/gateway.json}:/config/gateway.json
+      - ${BOOTSTRAP_CONFIG_FILE:-./config/local/gateway.json}:/config/gateway.json
       - ./pki/dcs/server.crt:/config/pki/server.crt
       - ./pki/dcs/server.key:/config/pki/server.key
       - ./pki/root.crt:/config/pki/root.crt
@@ -98,7 +98,7 @@ services:
     image: ghcr.io/safedep/gateway:latest
     command: pds-server
     volumes:
-      - ${BOOTSTRAP_CONFIG_FILE:-./config/gateway.json}:/config/gateway.json
+      - ${BOOTSTRAP_CONFIG_FILE:-./config/local/gateway.json}:/config/gateway.json
       - ./pki/pds/server.crt:/config/pki/server.crt
       - ./pki/pds/server.key:/config/pki/server.key
       - ./pki/root.crt:/config/pki/root.crt
