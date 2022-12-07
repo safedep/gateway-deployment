@@ -1,0 +1,77 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nats-server
+    group: infrastructure
+  name: nats-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nats-server
+  template:
+    metadata:
+      labels:
+        app: nats-server
+    spec:
+      volumes:
+      - name: nats-config
+        configMap:
+          name: nats-server-config
+          items:
+            - key: nats-server.conf
+              path: nats-server.conf
+      - name: root-crt
+        secret:
+          secretName: pki-root-crt
+          items:
+            - key: root.crt
+              path: root.crt
+      - name: nats-pki
+        secret:
+          secretName: nats-server-pki
+          items:
+            - key: server.crt
+              path: server.crt
+            - key: server.key
+              path: server.key
+      containers:
+      - name: nats
+        image: nats:2.7-alpine
+        command: [ "nats-server", "-c", "/config/nats-server.conf" ]
+        ports:
+          - containerPort: 4222
+        volumeMounts:
+          - name: nats-config
+            mountPath: /config
+            readOnly: true
+          - name: nats-pki
+            mountPath: /config/pki
+            readOnly: true
+          - name: root-crt
+            mountPath: /config/pki-root
+            readOnly: true
+        resources:
+          requests:
+            memory: "64M"
+            cpu: "100m"
+          limits:
+            memory: "128M"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nats-server
+  labels:
+    app: nats-server
+    group: infrastructure
+spec:
+  ports:
+  - port: 4222
+    protocol: TCP
+  selector:
+    app: nats-server
+

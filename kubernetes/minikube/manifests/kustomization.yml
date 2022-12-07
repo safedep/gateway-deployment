@@ -1,0 +1,46 @@
+configMapGenerator:
+  - name: nats-server-config
+    files:
+      - config/nats-server.conf
+  - name: gateway-config
+    files:
+      - config/gateway.json
+      - config/envoy.json
+secretGenerator:
+  - name: bootstrap
+    envs:
+      - .env
+  - name: pki-root-crt
+    files:
+      - pki/root.crt
+  - name: nats-server-pki
+    files:
+      - pki/nats-server/server.crt
+      - pki/nats-server/server.key
+  - name: pdp-pki
+    files:
+      - pki/pdp/server.crt
+      - pki/pdp/server.key
+  - name: tap-pki
+    files:
+      - pki/tap/server.crt
+      - pki/tap/server.key
+  - name: pds-pki
+    files:
+      - pki/pds/server.crt
+      - pki/pds/server.key
+  - name: dcs-pki
+    files:
+      - pki/dcs/server.crt
+      - pki/dcs/server.key
+resources:
+  - volume.yml
+  - mysql-server.yml
+  - nats-server.yml
+  - dcs.yml
+  - pds.yml
+  - tap.yml
+  - pdp.yml
+  - envoy.yml
+
+

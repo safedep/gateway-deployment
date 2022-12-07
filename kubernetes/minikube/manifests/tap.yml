@@ -1,0 +1,87 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: safedep-gateway-tap
+    group: safedep
+  name: safedep-gateway-tap
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: safedep-gateway-tap
+  template:
+    metadata:
+      labels:
+        app: safedep-gateway-tap
+    spec:
+      volumes:
+      - name: gateway-config
+        configMap:
+          name: gateway-config
+          items:
+            - key: gateway.json
+              path: gateway.json
+            - key: envoy.json
+              path: envoy.json
+      - name: root-crt
+        secret:
+          secretName: pki-root-crt
+          items:
+            - key: root.crt
+              path: root.crt
+      - name: tap-pki
+        secret:
+          secretName: tap-pki
+          items:
+            - key: server.crt
+              path: server.crt
+            - key: server.key
+              path: server.key
+      containers:
+      - name: safedep-gateway-tap
+        image: ghcr.io/safedep/gateway:latest
+        command: [ "tap-server" ]
+        ports:
+          - containerPort: 9001
+        volumeMounts:
+        - name: gateway-config
+          mountPath: /config
+          readOnly: true
+        - name: tap-pki
+          mountPath: /config/pki
+          readOnly: true
+        - name: root-crt
+          mountPath: /config/pki-root
+          readOnly: true
+        env:
+        - name: GLOBAL_CONFIG_PATH
+          value: /config/gateway.json
+        - name: SERVICE_TLS_CERT
+          value: /config/pki/server.crt
+        - name: SERVICE_TLS_KEY
+          value: /config/pki/server.key
+        - name: SERVICE_TLS_ROOT_CA
+          value: /config/pki-root/root.crt
+        resources:
+          requests:
+            memory: "64M"
+            cpu: "100m"
+          limits:
+            memory: "128M"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tap
+  labels:
+    app: safedep-gateway-tap
+spec:
+  ports:
+  - port: 9001
+    protocol: TCP
+  selector:
+    app: safedep-gateway-tap
+

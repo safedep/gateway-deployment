@@ -1,0 +1,75 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mysql-server
+    group: infrastructure
+  name: mysql-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-server
+  template:
+    metadata:
+      labels:
+        app: mysql-server
+    spec:
+      volumes:
+        - name: mysql-data-pvc
+          persistentVolumeClaim:
+            claimName: mysql-data
+      containers:
+      - image: mysql:8.0.31
+        name: mysql
+        ports:
+          - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: bootstrap
+              key: MYSQL_ROOT_PASSWORD
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: bootstrap
+              key: MYSQL_DCS_DATABASE
+        volumeMounts:
+          - name: mysql-data-pvc
+            mountPath: /var/lib/mysql
+        resources:
+          requests:
+            memory: "128M"
+            cpu: "250m"
+          limits:
+            memory: "256M"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-server
+  labels:
+    app: mysql-server
+    group: infrastructure
+spec:
+  ports:
+  - port: 3306
+    protocol: TCP
+  selector:
+    app: mysql-server
+

@@ -10,13 +10,13 @@ docker-compose up -d
 
 ### Configuration
 
-`config/gateway.json` is the source of truth for both gateway and envoy proxy configuration. When changed, envoy proxy configuration can be re-generated using:
+`config/local/gateway.json` is the source of truth for both gateway and envoy proxy configuration. When changed, envoy proxy configuration can be re-generated using:
 
 ```bash
 docker pull ghcr.io/safedep/gateway && \
 docker run -v `pwd`/config:/config:ro \
 ghcr.io/safedep/gateway:latest \
-confli -command generate-envoy -file /config/gateway.json > ./config/envoy.json
+confli -command generate-envoy -file /config/local/gateway.json > ./config/local/envoy.json
 ```
 
 ## Reference

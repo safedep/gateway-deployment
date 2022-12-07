@@ -1,0 +1,58 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: envoy-proxy
+    group: safedep
+  name: envoy-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: envoy-proxy
+  template:
+    metadata:
+      labels:
+        app: envoy-proxy
+    spec:
+      volumes:
+      - name: envoy-config
+        configMap:
+          name: gateway-config
+          items:
+            - key: envoy.json
+              path: envoy.json
+      containers:
+      - name: envoy-proxy
+        image: envoyproxy/envoy:v1.21.1
+        command: [ "envoy", "-c", "/config/envoy.json" ]
+        ports:
+          - containerPort: 10000
+        volumeMounts:
+          - name: envoy-config
+            mountPath: /config
+            readOnly: true
+        resources:
+          requests:
+            memory: "64M"
+            cpu: "100m"
+          limits:
+            memory: "128M"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: envoy-proxy
+  labels:
+    app: envoy-proxy
+    group: safedep
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 10000
+    protocol: TCP
+  selector:
+    app: envoy-proxy
+

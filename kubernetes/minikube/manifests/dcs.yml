@@ -1,0 +1,92 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: safedep-gateway-dcs
+    group: safedep
+  name: safedep-gateway-dcs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: safedep-gateway-dcs
+  template:
+    metadata:
+      labels:
+        app: safedep-gateway-dcs
+    spec:
+      volumes:
+      - name: gateway-config
+        configMap:
+          name: gateway-config
+          items:
+            - key: gateway.json
+              path: gateway.json
+            - key: envoy.json
+              path: envoy.json
+      - name: root-crt
+        secret:
+          secretName: pki-root-crt
+          items:
+            - key: root.crt
+              path: root.crt
+      - name: dcs-pki
+        secret:
+          secretName: dcs-pki
+          items:
+            - key: server.crt
+              path: server.crt
+            - key: server.key
+              path: server.key
+      containers:
+      - name: safedep-gateway-dcs
+        image: ghcr.io/safedep/gateway:latest
+        command: [ "dcs-server" ]
+        volumeMounts:
+        - name: gateway-config
+          mountPath: /config
+          readOnly: true
+        - name: dcs-pki
+          mountPath: /config/pki
+          readOnly: true
+        - name: root-crt
+          mountPath: /config/pki-root
+          readOnly: true
+        env:
+        - name: GLOBAL_CONFIG_PATH
+          value: /config/gateway.json
+        - name: SERVICE_TLS_CERT
+          value: /config/pki/server.crt
+        - name: SERVICE_TLS_KEY
+          value: /config/pki/server.key
+        - name: SERVICE_TLS_ROOT_CA
+          value: /config/pki-root/root.crt
+        - name: MYSQL_SERVER_HOST
+          value: mysql-server
+        - name: MYSQL_SERVER_PORT
+          value: "3306"
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: bootstrap
+              key: MYSQL_DCS_DATABASE
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: bootstrap
+              key: MYSQL_DCS_USER
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: bootstrap
+              key: MYSQL_DCS_PASSWORD
+        resources:
+          requests:
+            memory: "64M"
+            cpu: "100m"
+          limits:
+            memory: "128M"
+            cpu: "200m"
+---
+
