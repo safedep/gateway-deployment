@@ -4,9 +4,10 @@ Scripts and configuration for deploying security gateway in various environments
 
 ## Supported Environments
 
-| Name  | Docs             | Description                                                 |
-| ----- | ---------------- | ----------------------------------------------------------- |
-| local | [Docs](./local/) | Local / single instance setup for evaluation or quick start |
+| Name                  | Docs                          | Description                                                 |
+|-----------------------|-------------------------------|-------------------------------------------------------------|
+| local                 | [Docs](./local/)              | Local / single instance setup for evaluation or quick start |
+| kubernetes (minikube) | [Docs](./kubernetes/minikube) | Kubernetes deployment with minikube                         |
 
 ## Reference
 
